@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generative Fields</title>
+  <link rel="stylesheet" href="./demo.css">
+</head>
+<body>
+  <main id="fields-demo">
+    <header class="demo-header">
+      <div class="demo-title">
+        <h1>Generative Fields</h1>
+        <p>Sixteen slots, one shared layout function. Every layout below is the same compiled circuit reading a different field vector.</p>
+      </div>
+      <aside class="circuit-stats">
+        <span id="stat-line"></span>
+        <span id="recompile-line"></span>
+      </aside>
+    </header>
+
+    <section class="demo-stages">
+      <article>
+        <h2><span>Naive interpolation</span><small>a straight line through field space</small></h2>
+        <div id="stage-naive" class="demo-stage" aria-label="Naive interpolation stage">
+          <div class="stage-content"></div>
+          <div class="stage-flash" aria-hidden="true"></div>
+        </div>
+        <footer class="stage-readout">
+          <b id="naive-valid" class="valid-chip"></b>
+          <span>depth <b id="naive-depth"></b></span>
+          <span>fitness <b id="naive-fitness"></b></span>
+        </footer>
+      </article>
+      <article>
+        <h2><span>Validity projected</span><small>the same line, repaired by the circuit's own violation outputs</small></h2>
+        <div id="stage-projected" class="demo-stage" aria-label="Validity projected stage">
+          <div class="stage-content"></div>
+          <div class="stage-flash" aria-hidden="true"></div>
+        </div>
+        <footer class="stage-readout">
+          <b id="projected-valid" class="valid-chip"></b>
+          <span>depth <b id="projected-depth"></b></span>
+          <span>fitness <b id="projected-fitness"></b></span>
+        </footer>
+      </article>
+    </section>
+
+    <section class="demo-transport">
+      <button id="play-toggle" aria-label="Play or pause the interpolation"></button>
+      <input id="scrubber" type="range" min="0" max="1" step="0.001" value="1" aria-label="Interpolation position">
+      <span id="path-label"></span>
+    </section>
+
+    <section class="demo-controls">
+      <div class="control-group">
+        <h3>Families</h3>
+        <div class="preset-row">
+          <button data-preset="grid">Grid</button>
+          <button data-preset="heroRail">Hero</button>
+          <button data-preset="mosaic">Mosaic</button>
+          <button data-preset="list">List</button>
+          <button data-preset="filmstrip">Filmstrip</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h3>Search</h3>
+        <div class="generate-row">
+          <button id="generate">Generate</button>
+          <span id="search-summary">seeded search over the field space</span>
+        </div>
+        <div id="candidate-strip"></div>
+      </div>
+      <div class="control-group">
+        <h3>Fields</h3>
+        <label>gap <input id="gap-slider" type="range" min="0" max="0.06" step="0.001" aria-label="Horizontal gap"></label>
+        <label><span id="importance-name">importance</span> <input id="importance-slider" type="range" min="0" max="1" step="0.01" aria-label="Selected slot importance"></label>
+        <p class="control-hint">Click any tile to migrate the hero there. Every knob writes a number into the source table; the circuit does the rest.</p>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./demo.ts"></script>
+</body>
+</html>

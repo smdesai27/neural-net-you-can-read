@@ -1,0 +1,4 @@
+{
+  "extends": "./vendor/handwired/tsconfig.json",
+  "include": ["src/**/*.ts", "tests/**/*.ts", "site/**/*.ts", "site/assets.d.ts", "vendor/handwired/lab/types/loose-wires.d.ts"]
+}

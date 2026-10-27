@@ -1,0 +1,16 @@
+{
+  "name": "neural-net-you-can-read",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "bun ./site/index.html",
+    "build": "rm -rf dist && bun build ./site/index.html --outdir dist --minify",
+    "test": "bun test --timeout 60000 ./tests ./vendor/handwired/lab/generative-fields",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  }
+}

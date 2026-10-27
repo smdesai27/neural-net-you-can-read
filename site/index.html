@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A neural net you can read</title>
+<meta name="description" content="A page layout computed by a hand-written neural network. Breed it, then take it apart with real interpretability methods, checked against an answer key.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect x=%271%27 y=%271%27 width=%278%27 height=%276%27 fill=%27%23c8402a%27/%3E%3Crect x=%2710%27 y=%271%27 width=%275%27 height=%276%27 fill=%27%233e7a68%27/%3E%3Crect x=%271%27 y=%278%27 width=%274%27 height=%277%27 fill=%27%233e7a68%27/%3E%3Crect x=%276%27 y=%278%27 width=%279%27 height=%277%27 fill=%27%234a5f8c%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main>
+
+<header class="masthead">
+  <h1>A neural net you can read</h1>
+  <p class="dek">The layout below is computed by a neural network: every tile's size and position comes out of <span data-stat="neurons">6,693</span> neurons in <span data-stat="layers">201</span> layers. Nobody trained it. Every weight was written by hand with <a href="https://github.com/chenglou/handwired">handwired</a>, so every neuron has a known job. Breed the layout first, then take the network apart and check each interpretability method against the answer key.</p>
+</header>
+
+<section id="stage" class="section">
+  <div class="frame-wrap"><div class="frame" id="frame"></div></div>
+  <div class="controls">
+    <label for="width">Page width</label>
+    <input type="range" id="width" min="360" max="1920" step="1" value="1280">
+    <output id="width-out">1,280 px</output>
+    <span class="status" id="stage-status"></span>
+  </div>
+  <div class="network-wrap">
+    <canvas class="network" id="network-main" aria-label="The network: one column per layer, one dot per neuron"></canvas>
+    <div class="tooltip" id="tooltip" hidden></div>
+  </div>
+  <ul class="legend" id="legend"></ul>
+  <p class="note">Each column is a layer and each dot a neuron, colored by the stage of the program it belongs to. Solid dots are nonzero for this layout. Hover a tile to light up the neurons that compute it, or hover a dot to read its name.</p>
+</section>
+
+<section id="breed" class="section">
+  <h2>Breed it</h2>
+  <p>Each layout is a genome: <span data-stat="genes">45</span> numbers the network reads, like how wide a tile wants to be, which order tiles come in, and the narrowest a tile may get. Pick one or two you like and breed. Children are mutated copies; with two parents, each tile's genes come from one parent or the other. Each round tries 256 children, throws out the ones the network marks invalid, and shows the ones your taste model ranks highest, plus two at random.</p>
+  <div class="grid" id="brood"></div>
+  <div class="controls">
+    <button id="breed-go" class="primary">Breed from picked</button>
+    <button id="breed-adopt">Use picked as main layout</button>
+    <button id="breed-reset">Start over</button>
+    <label for="mutation">Mutation</label>
+    <input type="range" id="mutation" min="0.2" max="2.5" step="0.1" value="1">
+    <output id="mutation-out">1.0</output>
+    <button id="share">Copy link</button>
+  </div>
+  <p class="status" id="breed-status"></p>
+  <p class="error" id="breed-error" role="alert"></p>
+  <div class="taste">
+    <h3>What your picks say you like</h3>
+    <p class="note">Every pick counts as "this one over the ones I passed on." A seven-weight logistic model fits those comparisons on the layout's fill, balance, and five more measures. Positive weights are what it thinks you prefer.</p>
+    <div id="taste-bars" class="bars"></div>
+    <p class="status" id="taste-status"></p>
+  </div>
+</section>
+
+<section id="atlas" class="section">
+  <h2>The atlas</h2>
+  <p>The main layout at 48 page widths (across) and 12 values of one gene (down). Lines mark where the layout's row structure changes. Hover to preview, click to make it the main layout.</p>
+  <div class="controls">
+    <label for="atlas-gene">Down the side</label>
+    <select id="atlas-gene"></select>
+    <span class="status" id="atlas-status"></span>
+  </div>
+  <canvas id="atlas-canvas" class="atlas" aria-label="Atlas of layouts across page widths and gene values"></canvas>
+  <div class="atlas-preview">
+    <canvas id="atlas-preview"></canvas>
+    <p class="status" id="atlas-readout"></p>
+  </div>
+</section>
+
+<section id="lessons" class="section">
+  <h2>Look inside</h2>
+  <p>Interpretability means working out what a network's parts do. With a trained model you never learn whether you got it right. Here every neuron was written by a person, so each method below can be graded. All five run on your current main layout.</p>
+
+  <article class="lesson" id="lesson-read">
+    <h3>1. Read a neuron</h3>
+    <p>Search the network by name. In a trained model there are no names, and finding them is most of the work. Here the builder tagged <span data-stat="named">804</span> neurons as it created them, and every other neuron takes the name of the one it feeds.</p>
+    <div class="controls">
+      <label for="find">Find</label>
+      <input type="text" id="find" placeholder="tile 3" autocomplete="off">
+      <span class="status" id="find-status"></span>
+    </div>
+    <canvas class="network" id="network-find" aria-label="Network with search matches highlighted"></canvas>
+    <ol class="matches" id="find-list"></ol>
+    <p class="note">Look at the network's shape. Wide layers on the left sort and size the tiles all at once. Then comes a long, thin neck: the row-breaking loop, which has to place one tile before it can place the next, unrolled into <span data-stat="flowLayers">100</span> layers of depth. A sequential algorithm became depth.</p>
+  </article>
+
+  <article class="lesson" id="lesson-seams">
+    <h3>2. Seams are neurons flipping</h3>
+    <p>Every neuron here is a weighted sum, a ReLU, a ReGLU (a value times a ReLU), or a 0-or-1 decision. Inside a region of inputs where no ReLU switches and no decision flips, the whole network is one fixed smooth formula. It can only change behavior where some neuron crosses its threshold. The <a href="https://arxiv.org/abs/2211.12312">polytope lens</a> studies ReLU networks this way. Every line in the atlas is one of those crossings. Below are the main layout's seams from 360 to 1920 px, with the exact width and the neurons that flip there.</p>
+    <ol class="seams" id="seam-list"></ol>
+    <canvas id="seam-plot" class="plot" aria-label="A row-break neuron's input across page widths"></canvas>
+    <p class="note" id="seam-note">Click a seam to plot the score its row-break neuron rounds. At 0.5 or above, the tile starts a new row.</p>
+  </article>
+
+  <article class="lesson" id="lesson-break">
+    <h3>3. Break it: knocking out vs. gradients</h3>
+    <p>Two ways to ask "does this neuron matter?" Knock it out and measure how far the tiles move, or take the gradient of the layout with respect to it (gradient times activation, what a saliency map shows). Each dot is one neuron. Accent dots sit behind a decision: every path from them to a tile crosses a 0-or-1 step, so their gradient is exactly zero, whatever the input.</p>
+    <canvas id="break-plot" class="plot tall" aria-label="Scatter of gradient attribution against knockout effect"></canvas>
+    <p class="status" id="break-summary"></p>
+    <div class="pair">
+      <figure><canvas id="break-before"></canvas><figcaption>Main layout</figcaption></figure>
+      <figure><canvas id="break-after"></canvas><figcaption id="break-caption">Click a dot to knock it out</figcaption></figure>
+    </div>
+    <p class="note">This is why saliency maps mislead. A gradient only sees the local linear region. It cannot see what happens across a decision boundary, which is where this network does most of its work.</p>
+  </article>
+
+  <article class="lesson" id="lesson-patch">
+    <h3>4. Patch it</h3>
+    <p>Activation patching asks where a difference lives. Run layout A, but copy one neuron's value from run B and see how much of B shows up. Here B is A with one gene changed, so you know the answer before you start: the change has to enter through the neurons that read that gene.</p>
+    <div class="controls">
+      <label for="patch-gene">Change</label>
+      <select id="patch-gene"></select>
+      <label for="patch-amount">by</label>
+      <input type="range" id="patch-amount" min="-1" max="1" step="0.05" value="0.5">
+      <output id="patch-amount-out">+50%</output>
+    </div>
+    <div class="pair">
+      <figure><canvas id="patch-a"></canvas><figcaption>A: main layout</figcaption></figure>
+      <figure><canvas id="patch-b"></canvas><figcaption>B: one gene changed</figcaption></figure>
+    </div>
+    <div id="patch-bars" class="bars wide"></div>
+    <canvas id="patch-layers" class="plot" aria-label="Patch effect of each layer"></canvas>
+    <p class="note">1.0 means copying that single neuron turns A into B. Change the minimum tile width and one neuron, the first to read it, carries the whole difference. Change tile 1's importance and a chain of neurons each carry part of it, because the value is copied from link to link. "Where does it live?" then has several right answers. This is the same problem as backup heads in language-model circuits. The curve below patches whole layers: early layers carry everything because, in this network, every later layer reads from them directly.</p>
+  </article>
+
+  <article class="lesson" id="lesson-probe">
+    <h3>5. Probe it: readable isn't used</h3>
+    <p>A probe is a small linear model trained to read a fact out of one layer's neurons. High probe accuracy is often taken to mean the network uses that fact there. Train a probe at every layer on 1,200 variations of your main layout at random widths, then erase what the probe found and see whether the layout changes.</p>
+    <div class="controls">
+      <label for="probe-target">Read</label>
+      <select id="probe-target"></select>
+      <button id="probe-go" class="primary">Train probes</button>
+      <span class="status" id="probe-status"></span>
+    </div>
+    <canvas id="probe-plot" class="plot" aria-label="Probe accuracy at each layer"></canvas>
+    <p class="status" id="probe-readout"></p>
+    <p class="note">Click a bar to erase that layer's probe direction (the <a href="https://arxiv.org/abs/2006.00995">amnesic probing</a> test). Where the network uses a fact, erasing it scatters the tiles. In layers that only feed the validity checks, the fact can still be read perfectly, yet erasing it moves nothing. Readable doesn't mean used. See also <a href="https://arxiv.org/abs/1909.03368">control tasks</a>.</p>
+  </article>
+
+  <article class="lesson" id="lesson-close">
+    <h3>What a trained network won't give you</h3>
+    <p>This network is clean in ways real ones aren't. Each neuron has one job, it is sparse, and nothing is stored in <a href="https://transformer-circuits.pub/2022/toy_model/index.html">superposition</a>. So the point isn't that real models look like this. It's that each method above was graded against the truth, and three of them have a failure mode you could see: gradients go blind at decisions, patching smears across copies, and probes read facts the network has stopped using. <a href="https://arxiv.org/abs/2301.05062">Tracr</a> and <a href="https://arxiv.org/abs/2407.14494">InterpBench</a> build compiled and semi-synthetic transformers with known circuits for the same reason.</p>
+    <p>Next: unfreeze the weights, train them, and watch the names stop being true.</p>
+  </article>
+</section>
+
+<footer class="footer">
+  <p>Built on <a href="https://github.com/chenglou/handwired">handwired</a> by Cheng Lou (MIT), using its generative-fields layout experiment with one change: a minimum tile width in pixels. Photos from the handwired repo.</p>
+</footer>
+</main>
+<script type="module" src="./main.ts"></script>
+</body>
+</html>
